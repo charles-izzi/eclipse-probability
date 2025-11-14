@@ -22,12 +22,12 @@ function App() {
   const [player1, setPlayer1] = useState<Player>({
     ships: [
       {
-        healthPoints: 10,
-        initiative: 5,
-        shield: -2,
-        attackModifier: 2,
-        guns: [{ damage: 3 }],
-        missiles: [{ damage: 4 }],
+        healthPoints: 1,
+        initiative: 1,
+        shield: 0,
+        attackModifier: 0,
+        guns: [{ damage: 1 }],
+        missiles: [],
       },
     ],
   });
@@ -35,12 +35,12 @@ function App() {
   const [player2, setPlayer2] = useState<Player>({
     ships: [
       {
-        healthPoints: 10,
-        initiative: 5,
-        shield: -2,
-        attackModifier: 2,
-        guns: [{ damage: 3 }],
-        missiles: [{ damage: 4 }],
+        healthPoints: 1,
+        initiative: 1,
+        shield: 0,
+        attackModifier: 0,
+        guns: [{ damage: 1 }],
+        missiles: [],
       },
     ],
   });
@@ -48,16 +48,18 @@ function App() {
   const [result, setResult] = useState<{
     player1WinChance: number;
     player2WinChance: number;
+    player1ShipSurvival: number[];
+    player2ShipSurvival: number[];
   } | null>(null);
 
   const addShip = (playerNum: 1 | 2) => {
     const newShip: Ship = {
-      healthPoints: 10,
-      initiative: 5,
-      shield: -2,
-      attackModifier: 2,
-      guns: [{ damage: 3 }],
-      missiles: [{ damage: 4 }],
+      healthPoints: 1,
+      initiative: 1,
+      shield: 0,
+      attackModifier: 0,
+      guns: [{ damage: 1 }],
+      missiles: [],
     };
 
     if (playerNum === 1) {
@@ -72,6 +74,29 @@ function App() {
       setPlayer1({ ships: player1.ships.filter((_, i) => i !== shipIndex) });
     } else if (playerNum === 2 && player2.ships.length > 1) {
       setPlayer2({ ships: player2.ships.filter((_, i) => i !== shipIndex) });
+    }
+  };
+
+  const copyShip = (playerNum: 1 | 2, shipIndex: number) => {
+    const player = playerNum === 1 ? player1 : player2;
+    const shipToCopy = player.ships[shipIndex];
+
+    // Deep copy the ship with all its weapons
+    const copiedShip: Ship = {
+      healthPoints: shipToCopy.healthPoints,
+      initiative: shipToCopy.initiative,
+      shield: shipToCopy.shield,
+      attackModifier: shipToCopy.attackModifier,
+      guns: shipToCopy.guns.map((gun) => ({ damage: gun.damage })),
+      missiles: shipToCopy.missiles.map((missile) => ({
+        damage: missile.damage,
+      })),
+    };
+
+    if (playerNum === 1) {
+      setPlayer1({ ships: [...player1.ships, copiedShip] });
+    } else {
+      setPlayer2({ ships: [...player2.ships, copiedShip] });
     }
   };
 
@@ -102,7 +127,7 @@ function App() {
     const updatePlayer = (player: Player) => ({
       ships: player.ships.map((ship, i) =>
         i === shipIndex
-          ? { ...ship, [weaponType]: [...ship[weaponType], { damage: 3 }] }
+          ? { ...ship, [weaponType]: [...ship[weaponType], { damage: 1 }] }
           : ship
       ),
     });
@@ -188,6 +213,7 @@ function App() {
           playerNum={1}
           onAddShip={() => addShip(1)}
           onRemoveShip={(shipIndex) => removeShip(1, shipIndex)}
+          onCopyShip={(shipIndex) => copyShip(1, shipIndex)}
           onUpdateShip={(shipIndex, field, value) =>
             updateShip(1, shipIndex, field, value)
           }
@@ -235,18 +261,51 @@ function App() {
                 padding: "20px",
                 backgroundColor: "#f0f0f0",
                 borderRadius: "8px",
-                minWidth: "180px",
+                minWidth: "250px",
+                maxWidth: "400px",
               }}
             >
               <h3>Results</h3>
               <div style={{ marginTop: "10px" }}>
-                <strong>Player 1:</strong>{" "}
+                <strong>Player 1 Win Rate:</strong>{" "}
                 {(result.player1WinChance * 100).toFixed(2)}%
               </div>
-              <div style={{ marginTop: "10px" }}>
-                <strong>Player 2:</strong>{" "}
+              {result.player1ShipSurvival.length > 0 && (
+                <div
+                  style={{
+                    marginTop: "8px",
+                    fontSize: "14px",
+                    textAlign: "left",
+                    marginLeft: "20px",
+                  }}
+                >
+                  {result.player1ShipSurvival.map((survival, idx) => (
+                    <div key={idx} style={{ marginTop: "4px" }}>
+                      Ship {idx + 1}: {(survival * 100).toFixed(1)}%
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div style={{ marginTop: "15px" }}>
+                <strong>Player 2 Win Rate:</strong>{" "}
                 {(result.player2WinChance * 100).toFixed(2)}%
               </div>
+              {result.player2ShipSurvival.length > 0 && (
+                <div
+                  style={{
+                    marginTop: "8px",
+                    fontSize: "14px",
+                    textAlign: "left",
+                    marginLeft: "20px",
+                  }}
+                >
+                  {result.player2ShipSurvival.map((survival, idx) => (
+                    <div key={idx} style={{ marginTop: "4px" }}>
+                      Ship {idx + 1}: {(survival * 100).toFixed(1)}%
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -256,6 +315,7 @@ function App() {
           playerNum={2}
           onAddShip={() => addShip(2)}
           onRemoveShip={(shipIndex) => removeShip(2, shipIndex)}
+          onCopyShip={(shipIndex) => copyShip(2, shipIndex)}
           onUpdateShip={(shipIndex, field, value) =>
             updateShip(2, shipIndex, field, value)
           }
@@ -279,6 +339,7 @@ interface PlayerConfigProps {
   playerNum: number;
   onAddShip: () => void;
   onRemoveShip: (shipIndex: number) => void;
+  onCopyShip: (shipIndex: number) => void;
   onUpdateShip: (shipIndex: number, field: keyof Ship, value: number) => void;
   onAddWeapon: (shipIndex: number, weaponType: "guns" | "missiles") => void;
   onRemoveWeapon: (
@@ -299,6 +360,7 @@ function PlayerConfig({
   playerNum,
   onAddShip,
   onRemoveShip,
+  onCopyShip,
   onUpdateShip,
   onAddWeapon,
   onRemoveWeapon,
@@ -341,14 +403,22 @@ function PlayerConfig({
             }}
           >
             <h3 style={{ margin: 0 }}>Ship {shipIndex + 1}</h3>
-            {player.ships.length > 1 && (
+            <div style={{ display: "flex", gap: "8px" }}>
               <button
-                onClick={() => onRemoveShip(shipIndex)}
+                onClick={() => onCopyShip(shipIndex)}
                 style={{ padding: "4px 8px", cursor: "pointer" }}
               >
-                Remove
+                Copy
               </button>
-            )}
+              {player.ships.length > 1 && (
+                <button
+                  onClick={() => onRemoveShip(shipIndex)}
+                  style={{ padding: "4px 8px", cursor: "pointer" }}
+                >
+                  Remove
+                </button>
+              )}
+            </div>
           </div>
 
           <div style={{ display: "grid", gap: "8px" }}>
@@ -529,7 +599,12 @@ interface BattleState {
 function simulateBattle(
   player1: Player,
   player2: Player
-): { player1WinChance: number; player2WinChance: number } {
+): {
+  player1WinChance: number;
+  player2WinChance: number;
+  player1ShipSurvival: number[];
+  player2ShipSurvival: number[];
+} {
   const initialState: BattleState = {
     p1Ships: player1.ships.map((s) => s.healthPoints),
     p2Ships: player2.ships.map((s) => s.healthPoints),
@@ -539,6 +614,8 @@ function simulateBattle(
   let states: BattleState[] = [initialState];
   let player1Wins = 0;
   let player2Wins = 0;
+  const player1ShipSurvival: number[] = new Array(player1.ships.length).fill(0);
+  const player2ShipSurvival: number[] = new Array(player2.ships.length).fill(0);
 
   // Limit iterations to prevent infinite loops
   const maxRounds = 100;
@@ -562,11 +639,23 @@ function simulateBattle(
 
       if (!p1Alive) {
         player2Wins += state.probability;
+        // Track which player 2 ships survived
+        state.p2Ships.forEach((hp, idx) => {
+          if (hp > 0) {
+            player2ShipSurvival[idx] += state.probability;
+          }
+        });
         continue;
       }
 
       if (!p2Alive) {
         player1Wins += state.probability;
+        // Track which player 1 ships survived
+        state.p1Ships.forEach((hp, idx) => {
+          if (hp > 0) {
+            player1ShipSurvival[idx] += state.probability;
+          }
+        });
         continue;
       }
 
@@ -599,6 +688,8 @@ function simulateBattle(
   return {
     player1WinChance: player1Wins,
     player2WinChance: player2Wins,
+    player1ShipSurvival,
+    player2ShipSurvival,
   };
 }
 
