@@ -104,7 +104,7 @@ function App() {
     playerNum: 1 | 2,
     shipIndex: number,
     field: keyof Ship,
-    value: number
+    value: unknown
   ) => {
     const updatePlayer = (player: Player) => ({
       ships: player.ships.map((ship, i) =>
@@ -170,7 +170,7 @@ function App() {
     shipIndex: number,
     weaponType: "guns" | "missiles",
     weaponIndex: number,
-    damage: number
+    damage: unknown
   ) => {
     const updatePlayer = (player: Player) => ({
       ships: player.ships.map((ship, i) =>
@@ -192,7 +192,121 @@ function App() {
     }
   };
 
+  const validateAndNormalizePlayers = (): boolean => {
+    let hasErrors = false;
+    const errorMessages: string[] = [];
+
+    const validatePlayer = (player: Player, playerNum: number): Player => {
+      return {
+        ships: player.ships.map((ship, shipIndex) => {
+          const shipLabel = `Player ${playerNum} Ship ${shipIndex + 1}`;
+
+          // Parse string values to numbers
+          const healthPointsNum =
+            typeof ship.healthPoints === "string"
+              ? parseInt(ship.healthPoints) || 1
+              : ship.healthPoints || 1;
+          if (!Number.isInteger(healthPointsNum) || healthPointsNum < 1) {
+            hasErrors = true;
+            errorMessages.push(
+              `${shipLabel}: Health Points must be a positive integer`
+            );
+          }
+
+          const initiativeNum =
+            typeof ship.initiative === "string"
+              ? parseInt(ship.initiative) || 1
+              : ship.initiative ?? 1;
+          if (!Number.isInteger(initiativeNum) || initiativeNum < 0) {
+            hasErrors = true;
+            errorMessages.push(
+              `${shipLabel}: Initiative must be a non-negative integer`
+            );
+          }
+
+          const shieldNum =
+            typeof ship.shield === "string"
+              ? parseInt(ship.shield) || 0
+              : ship.shield ?? 0;
+          if (!Number.isInteger(shieldNum) || shieldNum > 0) {
+            hasErrors = true;
+            errorMessages.push(
+              `${shipLabel}: Shield must be a non-positive integer`
+            );
+          }
+
+          const attackModifierNum =
+            typeof ship.attackModifier === "string"
+              ? parseInt(ship.attackModifier) || 0
+              : ship.attackModifier ?? 0;
+          if (!Number.isInteger(attackModifierNum) || attackModifierNum < 0) {
+            hasErrors = true;
+            errorMessages.push(
+              `${shipLabel}: Attack Modifier must be a non-negative integer`
+            );
+          }
+
+          const guns = ship.guns.map((gun, gunIndex) => {
+            const damageNum =
+              typeof gun.damage === "string"
+                ? parseInt(gun.damage) || 1
+                : gun.damage || 1;
+            if (!Number.isInteger(damageNum) || damageNum < 1) {
+              hasErrors = true;
+              errorMessages.push(
+                `${shipLabel} Gun ${
+                  gunIndex + 1
+                }: Damage must be a positive integer`
+              );
+            }
+            return { damage: Math.max(1, Math.floor(damageNum)) };
+          });
+
+          const missiles = ship.missiles.map((missile, missileIndex) => {
+            const damageNum =
+              typeof missile.damage === "string"
+                ? parseInt(missile.damage) || 1
+                : missile.damage || 1;
+            if (!Number.isInteger(damageNum) || damageNum < 1) {
+              hasErrors = true;
+              errorMessages.push(
+                `${shipLabel} Missile ${
+                  missileIndex + 1
+                }: Damage must be a positive integer`
+              );
+            }
+            return { damage: Math.max(1, Math.floor(damageNum)) };
+          });
+
+          return {
+            healthPoints: Math.max(1, Math.floor(healthPointsNum)),
+            initiative: Math.max(0, Math.floor(initiativeNum)),
+            shield: Math.min(0, Math.floor(shieldNum)),
+            attackModifier: Math.max(0, Math.floor(attackModifierNum)),
+            guns,
+            missiles,
+          };
+        }),
+      };
+    };
+
+    const normalizedPlayer1 = validatePlayer(player1, 1);
+    const normalizedPlayer2 = validatePlayer(player2, 2);
+
+    if (hasErrors) {
+      alert("Validation errors:\n\n" + errorMessages.join("\n"));
+      return false;
+    }
+
+    setPlayer1(normalizedPlayer1);
+    setPlayer2(normalizedPlayer2);
+    return true;
+  };
+
   const calculateBattle = () => {
+    if (!validateAndNormalizePlayers()) {
+      return;
+    }
     const result = simulateBattle(player1, player2);
     setResult(result);
   };
@@ -352,7 +466,7 @@ interface PlayerConfigProps {
   onAddShip: () => void;
   onRemoveShip: (shipIndex: number) => void;
   onCopyShip: (shipIndex: number) => void;
-  onUpdateShip: (shipIndex: number, field: keyof Ship, value: number) => void;
+  onUpdateShip: (shipIndex: number, field: keyof Ship, value: unknown) => void;
   onAddWeapon: (shipIndex: number, weaponType: "guns" | "missiles") => void;
   onRemoveWeapon: (
     shipIndex: number,
@@ -363,7 +477,7 @@ interface PlayerConfigProps {
     shipIndex: number,
     weaponType: "guns" | "missiles",
     weaponIndex: number,
-    damage: number
+    damage: unknown
   ) => void;
 }
 
@@ -454,14 +568,12 @@ function PlayerConfig({
             <label>
               Health Points:
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 value={ship.healthPoints}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) =>
-                  onUpdateShip(
-                    shipIndex,
-                    "healthPoints",
-                    Math.max(1, parseInt(e.target.value) || 1)
-                  )
+                  onUpdateShip(shipIndex, "healthPoints", e.target.value)
                 }
                 style={{ marginLeft: "10px", width: "80px" }}
               />
@@ -470,14 +582,12 @@ function PlayerConfig({
             <label>
               Initiative:
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 value={ship.initiative}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) =>
-                  onUpdateShip(
-                    shipIndex,
-                    "initiative",
-                    Math.max(0, parseInt(e.target.value) || 0)
-                  )
+                  onUpdateShip(shipIndex, "initiative", e.target.value)
                 }
                 style={{ marginLeft: "10px", width: "80px" }}
               />
@@ -486,14 +596,12 @@ function PlayerConfig({
             <label>
               Shield (negative):
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 value={ship.shield}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) =>
-                  onUpdateShip(
-                    shipIndex,
-                    "shield",
-                    Math.min(0, parseInt(e.target.value) || 0)
-                  )
+                  onUpdateShip(shipIndex, "shield", e.target.value)
                 }
                 style={{ marginLeft: "10px", width: "80px" }}
               />
@@ -502,14 +610,12 @@ function PlayerConfig({
             <label>
               Attack Modifier:
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 value={ship.attackModifier}
+                onFocus={(e) => e.target.select()}
                 onChange={(e) =>
-                  onUpdateShip(
-                    shipIndex,
-                    "attackModifier",
-                    Math.max(0, parseInt(e.target.value) || 0)
-                  )
+                  onUpdateShip(shipIndex, "attackModifier", e.target.value)
                 }
                 style={{ marginLeft: "10px", width: "80px" }}
               />
@@ -538,14 +644,16 @@ function PlayerConfig({
                 >
                   Missile {mIndex + 1} Damage:
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     value={missile.damage}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) =>
                       onUpdateWeapon(
                         shipIndex,
                         "missiles",
                         mIndex,
-                        Math.max(1, parseInt(e.target.value) || 1)
+                        e.target.value
                       )
                     }
                     style={{ marginLeft: "10px", width: "60px" }}
@@ -592,15 +700,12 @@ function PlayerConfig({
                 >
                   Gun {gIndex + 1} Damage:
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     value={gun.damage}
+                    onFocus={(e) => e.target.select()}
                     onChange={(e) =>
-                      onUpdateWeapon(
-                        shipIndex,
-                        "guns",
-                        gIndex,
-                        Math.max(1, parseInt(e.target.value) || 1)
-                      )
+                      onUpdateWeapon(shipIndex, "guns", gIndex, e.target.value)
                     }
                     style={{ marginLeft: "10px", width: "60px" }}
                   />
@@ -907,7 +1012,10 @@ function fireWeapon(
     // Calculate hit probability
     // Hit when: d6 + attackModifier + shield >= 6
     // So: d6 >= 6 - attackModifier - shield
-    const threshold = 6 - attackingShip.attackModifier - targetShip.shield;
+    const threshold = Math.max(
+      2,
+      Math.min(6, 6 - attackingShip.attackModifier - targetShip.shield)
+    );
 
     let hitProbability = 0;
     for (let roll = 1; roll <= 6; roll++) {
