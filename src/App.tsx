@@ -206,6 +206,7 @@ function App() {
           display: "flex",
           gap: "20px",
           justifyContent: "space-between",
+          flexWrap: "wrap",
         }}
       >
         <PlayerConfig
@@ -235,6 +236,8 @@ function App() {
             justifyContent: "center",
             alignItems: "center",
             minWidth: "200px",
+            flexBasis: "100%",
+            order: 3,
           }}
         >
           <button
@@ -259,7 +262,8 @@ function App() {
               style={{
                 textAlign: "center",
                 padding: "20px",
-                backgroundColor: "#f0f0f0",
+                backgroundColor: "var(--vscode-editor-background, white)",
+                color: "var(--vscode-editor-foreground, black)",
                 borderRadius: "8px",
                 minWidth: "250px",
                 maxWidth: "400px",
@@ -276,11 +280,15 @@ function App() {
                     marginTop: "8px",
                     fontSize: "14px",
                     textAlign: "left",
-                    marginLeft: "20px",
+                    marginLeft: "40px",
                   }}
                 >
+                  <strong>Ship survival rates:</strong>
                   {result.player1ShipSurvival.map((survival, idx) => (
-                    <div key={idx} style={{ marginTop: "4px" }}>
+                    <div
+                      key={idx}
+                      style={{ marginTop: "4px", marginLeft: "10px" }}
+                    >
                       Ship {idx + 1}: {(survival * 100).toFixed(1)}%
                     </div>
                   ))}
@@ -296,11 +304,15 @@ function App() {
                     marginTop: "8px",
                     fontSize: "14px",
                     textAlign: "left",
-                    marginLeft: "20px",
+                    marginLeft: "40px",
                   }}
                 >
-                  {result.player2ShipSurvival.map((survival, idx) => (
-                    <div key={idx} style={{ marginTop: "4px" }}>
+                  <strong>Ship survival rates:</strong>
+                  {result.player1ShipSurvival.map((survival, idx) => (
+                    <div
+                      key={idx}
+                      style={{ marginTop: "4px", marginLeft: "10px" }}
+                    >
                       Ship {idx + 1}: {(survival * 100).toFixed(1)}%
                     </div>
                   ))}
@@ -369,7 +381,7 @@ function PlayerConfig({
   return (
     <div
       style={{
-        flex: 1,
+        flex: "1 1 130px",
         border: "2px solid #333",
         borderRadius: "8px",
         padding: "15px",
@@ -378,7 +390,13 @@ function PlayerConfig({
       <h2>Player {playerNum}</h2>
       <button
         onClick={onAddShip}
-        style={{ marginBottom: "15px", padding: "8px 16px", cursor: "pointer" }}
+        style={{
+          marginBottom: "15px",
+          padding: "8px 16px",
+          cursor: "pointer",
+          backgroundColor: "var(--vscode-editor-background, white)",
+          color: "var(--vscode-editor-foreground, black)",
+        }}
       >
         Add Ship
       </button>
@@ -391,7 +409,8 @@ function PlayerConfig({
             borderRadius: "4px",
             padding: "10px",
             marginBottom: "15px",
-            backgroundColor: "#f9f9f9",
+            backgroundColor: "var(--vscode-editor-background, white)",
+            color: "var(--vscode-editor-foreground, black)",
           }}
         >
           <div
@@ -406,14 +425,24 @@ function PlayerConfig({
             <div style={{ display: "flex", gap: "8px" }}>
               <button
                 onClick={() => onCopyShip(shipIndex)}
-                style={{ padding: "4px 8px", cursor: "pointer" }}
+                style={{
+                  padding: "4px 8px",
+                  cursor: "pointer",
+                  backgroundColor: "var(--vscode-editor-background, white)",
+                  color: "var(--vscode-editor-foreground, black)",
+                }}
               >
                 Copy
               </button>
               {player.ships.length > 1 && (
                 <button
                   onClick={() => onRemoveShip(shipIndex)}
-                  style={{ padding: "4px 8px", cursor: "pointer" }}
+                  style={{
+                    padding: "4px 8px",
+                    cursor: "pointer",
+                    backgroundColor: "var(--vscode-editor-background, white)",
+                    color: "var(--vscode-editor-foreground, black)",
+                  }}
                 >
                   Remove
                 </button>
@@ -496,6 +525,8 @@ function PlayerConfig({
                   marginLeft: "10px",
                   padding: "2px 8px",
                   cursor: "pointer",
+                  backgroundColor: "var(--vscode-editor-background, white)",
+                  color: "var(--vscode-editor-foreground, black)",
                 }}
               >
                 +
@@ -528,6 +559,9 @@ function PlayerConfig({
                         marginLeft: "10px",
                         padding: "2px 8px",
                         cursor: "pointer",
+                        backgroundColor:
+                          "var(--vscode-editor-background, white)",
+                        color: "var(--vscode-editor-foreground, black)",
                       }}
                     >
                       ×
@@ -545,6 +579,8 @@ function PlayerConfig({
                   marginLeft: "10px",
                   padding: "2px 8px",
                   cursor: "pointer",
+                  backgroundColor: "var(--vscode-editor-background, white)",
+                  color: "var(--vscode-editor-foreground, black)",
                 }}
               >
                 +
@@ -575,6 +611,9 @@ function PlayerConfig({
                         marginLeft: "10px",
                         padding: "2px 8px",
                         cursor: "pointer",
+                        backgroundColor:
+                          "var(--vscode-editor-background, white)",
+                        color: "var(--vscode-editor-foreground, black)",
                       }}
                     >
                       ×
