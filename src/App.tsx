@@ -308,7 +308,7 @@ function App() {
                   }}
                 >
                   <strong>Ship survival rates:</strong>
-                  {result.player1ShipSurvival.map((survival, idx) => (
+                  {result.player2ShipSurvival.map((survival, idx) => (
                     <div
                       key={idx}
                       style={{ marginTop: "4px", marginLeft: "10px" }}
