@@ -1,5 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./App.css";
+
+const STORAGE_KEY_P1 = "eclipse-battle-player1";
+const STORAGE_KEY_P2 = "eclipse-battle-player2";
+
+const defaultShip: Ship = {
+  healthPoints: 1,
+  initiative: 1,
+  shield: 0,
+  attackModifier: 0,
+  guns: [{ damage: 1 }],
+  missiles: [],
+};
+
+const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
+  try {
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.error(`Failed to load ${key} from localStorage:`, e);
+  }
+  return defaultValue;
+};
 
 interface Weapon {
   damage: number;
@@ -19,31 +43,34 @@ interface Player {
 }
 
 function App() {
-  const [player1, setPlayer1] = useState<Player>({
-    ships: [
-      {
-        healthPoints: 1,
-        initiative: 1,
-        shield: 0,
-        attackModifier: 0,
-        guns: [{ damage: 1 }],
-        missiles: [],
-      },
-    ],
-  });
+  const [player1, setPlayer1] = useState<Player>(() =>
+    loadFromStorage(STORAGE_KEY_P1, {
+      ships: [{ ...defaultShip, guns: [{ damage: 1 }], missiles: [] }],
+    })
+  );
 
-  const [player2, setPlayer2] = useState<Player>({
-    ships: [
-      {
-        healthPoints: 1,
-        initiative: 1,
-        shield: 0,
-        attackModifier: 0,
-        guns: [{ damage: 1 }],
-        missiles: [],
-      },
-    ],
-  });
+  const [player2, setPlayer2] = useState<Player>(() =>
+    loadFromStorage(STORAGE_KEY_P2, {
+      ships: [{ ...defaultShip, guns: [{ damage: 1 }], missiles: [] }],
+    })
+  );
+
+  // Save to localStorage whenever player state changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_P1, JSON.stringify(player1));
+    } catch (e) {
+      console.error("Failed to save player1 to localStorage:", e);
+    }
+  }, [player1]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_P2, JSON.stringify(player2));
+    } catch (e) {
+      console.error("Failed to save player2 to localStorage:", e);
+    }
+  }, [player2]);
 
   const [result, setResult] = useState<{
     player1WinChance: number;
@@ -52,12 +79,13 @@ function App() {
     player2ShipSurvival: number[];
   } | null>(null);
 
+  const [isCalculating, setIsCalculating] = useState(false);
+
+  const resultsRef = useRef<HTMLDivElement>(null);
+
   const addShip = (playerNum: 1 | 2) => {
     const newShip: Ship = {
-      healthPoints: 1,
-      initiative: 1,
-      shield: 0,
-      attackModifier: 0,
+      ...defaultShip,
       guns: [{ damage: 1 }],
       missiles: [],
     };
@@ -303,12 +331,29 @@ function App() {
     return true;
   };
 
-  const calculateBattle = () => {
+  const calculateBattle = async () => {
     if (!validateAndNormalizePlayers()) {
       return;
     }
-    const result = simulateBattle(player1, player2);
-    setResult(result);
+    setIsCalculating(true);
+    setResult(null);
+
+    // Use setTimeout to allow the UI to update before heavy calculation
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    try {
+      const result = simulateBattle(player1, player2);
+      setResult(result);
+      // Scroll to results after render
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      }, 0);
+    } finally {
+      setIsCalculating(false);
+    }
   };
 
   return (
@@ -356,23 +401,40 @@ function App() {
         >
           <button
             onClick={calculateBattle}
+            disabled={isCalculating}
             style={{
               padding: "20px 40px",
               fontSize: "24px",
               fontWeight: "bold",
-              cursor: "pointer",
-              backgroundColor: "#4CAF50",
+              cursor: isCalculating ? "not-allowed" : "pointer",
+              backgroundColor: isCalculating ? "#7cb87e" : "#4CAF50",
               color: "white",
               border: "none",
               borderRadius: "8px",
               marginBottom: "20px",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
             }}
           >
-            BATTLE
+            {isCalculating && (
+              <span
+                style={{
+                  width: "20px",
+                  height: "20px",
+                  border: "3px solid rgba(255,255,255,0.3)",
+                  borderTop: "3px solid white",
+                  borderRadius: "50%",
+                  animation: "spin 1s linear infinite",
+                }}
+              />
+            )}
+            {isCalculating ? "Calculating..." : "BATTLE"}
           </button>
 
           {result && (
             <div
+              ref={resultsRef}
               style={{
                 textAlign: "center",
                 padding: "20px",
@@ -385,7 +447,7 @@ function App() {
             >
               <h3>Results</h3>
               <div style={{ marginTop: "10px" }}>
-                <strong>Player 1 Win Rate:</strong>{" "}
+                <strong>Defender Win Rate:</strong>{" "}
                 {(result.player1WinChance * 100).toFixed(2)}%
               </div>
               {result.player1ShipSurvival.length > 0 && (
@@ -409,7 +471,7 @@ function App() {
                 </div>
               )}
               <div style={{ marginTop: "15px" }}>
-                <strong>Player 2 Win Rate:</strong>{" "}
+                <strong>Attacker Win Rate:</strong>{" "}
                 {(result.player2WinChance * 100).toFixed(2)}%
               </div>
               {result.player2ShipSurvival.length > 0 && (
@@ -501,7 +563,7 @@ function PlayerConfig({
         padding: "15px",
       }}
     >
-      <h2>Player {playerNum}</h2>
+      <h2>{playerNum === 1 ? "Defender" : "Attacker"}</h2>
       <button
         onClick={onAddShip}
         style={{
@@ -761,6 +823,9 @@ function simulateBattle(
   const player1ShipSurvival: number[] = new Array(player1.ships.length).fill(0);
   const player2ShipSurvival: number[] = new Array(player2.ships.length).fill(0);
 
+  // Execute missile phase once at the start of battle (before any guns fire)
+  states = executeMissileRound(states, player1, player2);
+
   // Limit iterations to prevent infinite loops
   const maxRounds = 100;
   let round = 0;
@@ -900,24 +965,93 @@ function executeRound(
           ? player1.ships[shipInfo.shipIndex]
           : player2.ships[shipInfo.shipIndex];
 
-      // Missiles phase
-      const afterMissiles = executeMissilePhase(
+      // Guns phase only (missiles already fired at start of battle)
+      const afterGuns = executeGunsPhase(
         currentState,
         ship,
         shipInfo.playerNum === 1 ? player2 : player1,
         shipInfo.playerNum
       );
+      newStates.push(...afterGuns);
+    }
 
-      // Guns phase for each resulting state
-      for (const missileState of afterMissiles) {
-        const afterGuns = executeGunsPhase(
-          missileState,
-          ship,
-          shipInfo.playerNum === 1 ? player2 : player1,
-          shipInfo.playerNum
-        );
-        newStates.push(...afterGuns);
+    currentStates = newStates;
+  }
+
+  return currentStates;
+}
+
+// Execute all missiles at the start of battle (before any guns fire)
+// Missiles fire only once per battle, ordered by initiative
+function executeMissileRound(
+  states: BattleState[],
+  player1: Player,
+  player2: Player
+): BattleState[] {
+  // Get all ships with missiles, sorted by initiative
+  interface MissileShipInfo {
+    playerNum: 1 | 2;
+    shipIndex: number;
+    initiative: number;
+    ship: Ship;
+  }
+
+  const shipsWithMissiles: MissileShipInfo[] = [];
+
+  player1.ships.forEach((ship, i) => {
+    if (ship.missiles.length > 0) {
+      shipsWithMissiles.push({
+        playerNum: 1,
+        shipIndex: i,
+        initiative: ship.initiative,
+        ship,
+      });
+    }
+  });
+
+  player2.ships.forEach((ship, i) => {
+    if (ship.missiles.length > 0) {
+      shipsWithMissiles.push({
+        playerNum: 2,
+        shipIndex: i,
+        initiative: ship.initiative,
+        ship,
+      });
+    }
+  });
+
+  // Sort by initiative (higher first), player 1 wins ties
+  shipsWithMissiles.sort((a, b) => {
+    if (b.initiative !== a.initiative) return b.initiative - a.initiative;
+    return a.playerNum - b.playerNum;
+  });
+
+  // Fire all missiles in initiative order
+  let currentStates = states;
+
+  for (const shipInfo of shipsWithMissiles) {
+    const newStates: BattleState[] = [];
+
+    for (const currentState of currentStates) {
+      // Check if this ship is still alive
+      const isAlive =
+        shipInfo.playerNum === 1
+          ? currentState.p1Ships[shipInfo.shipIndex] > 0
+          : currentState.p2Ships[shipInfo.shipIndex] > 0;
+
+      if (!isAlive) {
+        newStates.push(currentState);
+        continue;
       }
+
+      // Fire all missiles from this ship
+      const afterMissiles = executeMissilePhase(
+        currentState,
+        shipInfo.ship,
+        shipInfo.playerNum === 1 ? player2 : player1,
+        shipInfo.playerNum
+      );
+      newStates.push(...afterMissiles);
     }
 
     currentStates = newStates;
@@ -1012,6 +1146,8 @@ function fireWeapon(
     // Calculate hit probability
     // Hit when: d6 + attackModifier + shield >= 6
     // So: d6 >= 6 - attackModifier - shield
+    // A 6 roll is automatic hit, so maximum threshold is 6
+    // A 1 roll is automatic miss, so minimum threshold is 2
     const threshold = Math.max(
       2,
       Math.min(6, 6 - attackingShip.attackModifier - targetShip.shield)
