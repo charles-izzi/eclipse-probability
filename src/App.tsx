@@ -128,6 +128,18 @@ function App() {
     }
   };
 
+  const resetPlayer = (playerNum: 1 | 2) => {
+    const defaultPlayer: Player = {
+      ships: [{ ...defaultShip, guns: [{ damage: 1 }], missiles: [] }],
+    };
+
+    if (playerNum === 1) {
+      setPlayer1(defaultPlayer);
+    } else {
+      setPlayer2(defaultPlayer);
+    }
+  };
+
   const updateShip = (
     playerNum: 1 | 2,
     shipIndex: number,
@@ -372,6 +384,7 @@ function App() {
           player={player1}
           playerNum={1}
           onAddShip={() => addShip(1)}
+          onReset={() => resetPlayer(1)}
           onRemoveShip={(shipIndex) => removeShip(1, shipIndex)}
           onCopyShip={(shipIndex) => copyShip(1, shipIndex)}
           onUpdateShip={(shipIndex, field, value) =>
@@ -502,6 +515,7 @@ function App() {
           player={player2}
           playerNum={2}
           onAddShip={() => addShip(2)}
+          onReset={() => resetPlayer(2)}
           onRemoveShip={(shipIndex) => removeShip(2, shipIndex)}
           onCopyShip={(shipIndex) => copyShip(2, shipIndex)}
           onUpdateShip={(shipIndex, field, value) =>
@@ -526,6 +540,7 @@ interface PlayerConfigProps {
   player: Player;
   playerNum: number;
   onAddShip: () => void;
+  onReset: () => void;
   onRemoveShip: (shipIndex: number) => void;
   onCopyShip: (shipIndex: number) => void;
   onUpdateShip: (shipIndex: number, field: keyof Ship, value: unknown) => void;
@@ -547,6 +562,7 @@ function PlayerConfig({
   player,
   playerNum,
   onAddShip,
+  onReset,
   onRemoveShip,
   onCopyShip,
   onUpdateShip,
@@ -564,18 +580,30 @@ function PlayerConfig({
       }}
     >
       <h2>{playerNum === 1 ? "Defender" : "Attacker"}</h2>
-      <button
-        onClick={onAddShip}
-        style={{
-          marginBottom: "15px",
-          padding: "8px 16px",
-          cursor: "pointer",
-          backgroundColor: "var(--vscode-editor-background, white)",
-          color: "var(--vscode-editor-foreground, black)",
-        }}
-      >
-        Add Ship
-      </button>
+      <div style={{ display: "flex", gap: "8px", marginBottom: "15px" }}>
+        <button
+          onClick={onAddShip}
+          style={{
+            padding: "8px 16px",
+            cursor: "pointer",
+            backgroundColor: "var(--vscode-editor-background, white)",
+            color: "var(--vscode-editor-foreground, black)",
+          }}
+        >
+          Add Ship
+        </button>
+        <button
+          onClick={onReset}
+          style={{
+            padding: "8px 16px",
+            cursor: "pointer",
+            backgroundColor: "var(--vscode-editor-background, white)",
+            color: "var(--vscode-editor-foreground, black)",
+          }}
+        >
+          Reset
+        </button>
+      </div>
 
       {player.ships.map((ship, shipIndex) => (
         <div
