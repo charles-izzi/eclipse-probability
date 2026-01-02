@@ -1145,7 +1145,7 @@ function fireWeapon(
 
     // Calculate hit probability
     // Hit when: d6 + attackModifier + shield >= 6
-    // So: d6 >= 6 - attackModifier - shield
+    // So: d6 >= 6 - attackModifier - shield (negative number)
     // A 6 roll is automatic hit, so maximum threshold is 6
     // A 1 roll is automatic miss, so minimum threshold is 2
     const threshold = Math.max(
@@ -1153,12 +1153,7 @@ function fireWeapon(
       Math.min(6, 6 - attackingShip.attackModifier - targetShip.shield)
     );
 
-    let hitProbability = 0;
-    for (let roll = 1; roll <= 6; roll++) {
-      if (roll >= threshold) {
-        hitProbability += 1 / 6;
-      }
-    }
+    const hitProbability = (6 - threshold + 1) / 6;
 
     // Hit state
     if (hitProbability > 0) {
