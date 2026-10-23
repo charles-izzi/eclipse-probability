@@ -81,7 +81,7 @@ function App() {
 
   const [isCalculating, setIsCalculating] = useState(false);
 
-  const resultsRef = useRef<HTMLDivElement>(null);
+  const resultsRef = useRef<HTMLElement>(null);
 
   const addShip = (playerNum: 1 | 2) => {
     const newShip: Ship = {
@@ -369,168 +369,102 @@ function App() {
   };
 
   return (
-    <div style={{ padding: "20px", maxWidth: "1400px", margin: "0 auto" }}>
-      <h1 style={{ textAlign: "center" }}>Battle Probability Calculator</h1>
-
-      <div
-        style={{
-          display: "flex",
-          gap: "20px",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-        }}
-      >
-        <PlayerConfig
-          player={player1}
-          playerNum={1}
-          onAddShip={() => addShip(1)}
-          onReset={() => resetPlayer(1)}
-          onRemoveShip={(shipIndex) => removeShip(1, shipIndex)}
-          onCopyShip={(shipIndex) => copyShip(1, shipIndex)}
-          onUpdateShip={(shipIndex, field, value) =>
-            updateShip(1, shipIndex, field, value)
-          }
-          onAddWeapon={(shipIndex, weaponType) =>
-            addWeapon(1, shipIndex, weaponType)
-          }
-          onRemoveWeapon={(shipIndex, weaponType, weaponIndex) =>
-            removeWeapon(1, shipIndex, weaponType, weaponIndex)
-          }
-          onUpdateWeapon={(shipIndex, weaponType, weaponIndex, damage) =>
-            updateWeapon(1, shipIndex, weaponType, weaponIndex, damage)
-          }
-        />
-
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            minWidth: "200px",
-            flexBasis: "100%",
-            order: 3,
-          }}
-        >
-          <button
-            onClick={calculateBattle}
-            disabled={isCalculating}
-            style={{
-              padding: "20px 40px",
-              fontSize: "24px",
-              fontWeight: "bold",
-              cursor: isCalculating ? "not-allowed" : "pointer",
-              backgroundColor: isCalculating ? "#7cb87e" : "#4CAF50",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              marginBottom: "20px",
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-            }}
-          >
-            {isCalculating && (
-              <span
-                style={{
-                  width: "20px",
-                  height: "20px",
-                  border: "3px solid rgba(255,255,255,0.3)",
-                  borderTop: "3px solid white",
-                  borderRadius: "50%",
-                  animation: "spin 1s linear infinite",
-                }}
-              />
-            )}
-            {isCalculating ? "Calculating..." : "BATTLE"}
-          </button>
-
-          {result && (
-            <div
-              ref={resultsRef}
-              style={{
-                textAlign: "center",
-                padding: "20px",
-                backgroundColor: "var(--vscode-editor-background, white)",
-                color: "var(--vscode-editor-foreground, black)",
-                borderRadius: "8px",
-                minWidth: "250px",
-                maxWidth: "400px",
-              }}
-            >
-              <h3>Results</h3>
-              <div style={{ marginTop: "10px" }}>
-                <strong>Defender Win Rate:</strong>{" "}
-                {(result.player1WinChance * 100).toFixed(2)}%
-              </div>
-              {result.player1ShipSurvival.length > 0 && (
-                <div
-                  style={{
-                    marginTop: "8px",
-                    fontSize: "14px",
-                    textAlign: "left",
-                    marginLeft: "40px",
-                  }}
-                >
-                  <strong>Ship survival rates:</strong>
-                  {result.player1ShipSurvival.map((survival, idx) => (
-                    <div
-                      key={idx}
-                      style={{ marginTop: "4px", marginLeft: "10px" }}
-                    >
-                      Ship {idx + 1}: {(survival * 100).toFixed(1)}%
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div style={{ marginTop: "15px" }}>
-                <strong>Attacker Win Rate:</strong>{" "}
-                {(result.player2WinChance * 100).toFixed(2)}%
-              </div>
-              {result.player2ShipSurvival.length > 0 && (
-                <div
-                  style={{
-                    marginTop: "8px",
-                    fontSize: "14px",
-                    textAlign: "left",
-                    marginLeft: "40px",
-                  }}
-                >
-                  <strong>Ship survival rates:</strong>
-                  {result.player2ShipSurvival.map((survival, idx) => (
-                    <div
-                      key={idx}
-                      style={{ marginTop: "4px", marginLeft: "10px" }}
-                    >
-                      Ship {idx + 1}: {(survival * 100).toFixed(1)}%
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+    <div className="battle-page companion-page">
+      <div className="page-container">
+        <div className="page-hero">
+          <div>
+            <p className="eyebrow">BEFORE THE BATTLE</p>
+            <h1>Battle probability <span>calculator.</span></h1>
+            <p>Build your fleets. Compare the odds. Make your next move count.</p>
+          </div>
         </div>
 
-        <PlayerConfig
-          player={player2}
-          playerNum={2}
-          onAddShip={() => addShip(2)}
-          onReset={() => resetPlayer(2)}
-          onRemoveShip={(shipIndex) => removeShip(2, shipIndex)}
-          onCopyShip={(shipIndex) => copyShip(2, shipIndex)}
-          onUpdateShip={(shipIndex, field, value) =>
-            updateShip(2, shipIndex, field, value)
-          }
-          onAddWeapon={(shipIndex, weaponType) =>
-            addWeapon(2, shipIndex, weaponType)
-          }
-          onRemoveWeapon={(shipIndex, weaponType, weaponIndex) =>
-            removeWeapon(2, shipIndex, weaponType, weaponIndex)
-          }
-          onUpdateWeapon={(shipIndex, weaponType, weaponIndex, damage) =>
-            updateWeapon(2, shipIndex, weaponType, weaponIndex, damage)
-          }
-        />
+        <div className="battle-layout">
+          <PlayerConfig
+            player={player1}
+            playerNum={1}
+            onAddShip={() => addShip(1)}
+            onReset={() => resetPlayer(1)}
+            onRemoveShip={(shipIndex) => removeShip(1, shipIndex)}
+            onCopyShip={(shipIndex) => copyShip(1, shipIndex)}
+            onUpdateShip={(shipIndex, field, value) =>
+              updateShip(1, shipIndex, field, value)
+            }
+            onAddWeapon={(shipIndex, weaponType) =>
+              addWeapon(1, shipIndex, weaponType)
+            }
+            onRemoveWeapon={(shipIndex, weaponType, weaponIndex) =>
+              removeWeapon(1, shipIndex, weaponType, weaponIndex)
+            }
+            onUpdateWeapon={(shipIndex, weaponType, weaponIndex, damage) =>
+              updateWeapon(1, shipIndex, weaponType, weaponIndex, damage)
+            }
+          />
+
+          <PlayerConfig
+            player={player2}
+            playerNum={2}
+            onAddShip={() => addShip(2)}
+            onReset={() => resetPlayer(2)}
+            onRemoveShip={(shipIndex) => removeShip(2, shipIndex)}
+            onCopyShip={(shipIndex) => copyShip(2, shipIndex)}
+            onUpdateShip={(shipIndex, field, value) =>
+              updateShip(2, shipIndex, field, value)
+            }
+            onAddWeapon={(shipIndex, weaponType) =>
+              addWeapon(2, shipIndex, weaponType)
+            }
+            onRemoveWeapon={(shipIndex, weaponType, weaponIndex) =>
+              removeWeapon(2, shipIndex, weaponType, weaponIndex)
+            }
+            onUpdateWeapon={(shipIndex, weaponType, weaponIndex, damage) =>
+              updateWeapon(2, shipIndex, weaponType, weaponIndex, damage)
+            }
+          />
+        </div>
+
+        <div className="battle-actions">
+          <button
+            className="battle-button"
+            onClick={calculateBattle}
+            disabled={isCalculating}
+          >
+            {isCalculating && <span className="battle-spinner" aria-hidden="true" />}
+            {isCalculating ? "Calculating..." : "BATTLE"}
+          </button>
+          <p>Fleet configurations are saved automatically on this device.</p>
+        </div>
+
+        {result && (
+          <section className="battle-results page-card" ref={resultsRef} aria-labelledby="battle-results-heading" aria-live="polite">
+            <div className="battle-results-heading">
+              <p className="eyebrow">THE ODDS</p>
+              <h2 id="battle-results-heading">Battle results</h2>
+            </div>
+            <div className="battle-results-grid">
+              {[
+                { name: "Defender", chance: result.player1WinChance, survival: result.player1ShipSurvival },
+                { name: "Attacker", chance: result.player2WinChance, survival: result.player2ShipSurvival },
+              ].map((side) => (
+                <div key={side.name} className="battle-result-side">
+                  <h3>{side.name} Win Rate</h3>
+                  <strong className="battle-win-rate">{(side.chance * 100).toFixed(2)}%</strong>
+                  {side.survival.length > 0 && (
+                    <div className="ship-survival">
+                      <h4>Ship survival rates</h4>
+                      <ul>
+                        {side.survival.map((survival, index) => (
+                          <li key={index}><span>Ship {index + 1}</span><strong>{(survival * 100).toFixed(1)}%</strong></li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+        <footer className="page-footer"><span>ECLIPSE / BATTLE PLANNER</span><span>Every move starts with a plan.</span></footer>
       </div>
     </div>
   );
@@ -571,256 +505,190 @@ function PlayerConfig({
   onUpdateWeapon,
 }: PlayerConfigProps) {
   return (
-    <div
-      style={{
-        flex: "1 1 130px",
-        border: "2px solid #333",
-        borderRadius: "8px",
-        padding: "15px",
-      }}
-    >
-      <h2>{playerNum === 1 ? "Defender" : "Attacker"}</h2>
-      <div style={{ display: "flex", gap: "8px", marginBottom: "15px" }}>
-        <button
-          onClick={onAddShip}
-          style={{
-            padding: "8px 16px",
-            cursor: "pointer",
-            backgroundColor: "var(--vscode-editor-background, white)",
-            color: "var(--vscode-editor-foreground, black)",
-          }}
-        >
-          Add Ship
-        </button>
-        <button
-          onClick={onReset}
-          style={{
-            padding: "8px 16px",
-            cursor: "pointer",
-            backgroundColor: "var(--vscode-editor-background, white)",
-            color: "var(--vscode-editor-foreground, black)",
-          }}
-        >
-          Reset
-        </button>
+    <section className="fleet-panel page-card" aria-labelledby={`fleet-${playerNum}-heading`}>
+      <div className="fleet-heading">
+        <div>
+          <p className="eyebrow">{playerNum === 1 ? "HOLD THE LINE" : "TAKE THE INITIATIVE"}</p>
+          <h2 id={`fleet-${playerNum}-heading`}>{playerNum === 1 ? "Defender" : "Attacker"}</h2>
+        </div>
+        <span className="fleet-count">{player.ships.length} {player.ships.length === 1 ? "ship" : "ships"}</span>
+      </div>
+      <div className="fleet-actions">
+        <button onClick={onAddShip}>Add Ship</button>
+        <button onClick={onReset}>Reset</button>
       </div>
 
-      {player.ships.map((ship, shipIndex) => (
-        <div
-          key={shipIndex}
-          style={{
-            border: "1px solid #666",
-            borderRadius: "4px",
-            padding: "10px",
-            marginBottom: "15px",
-            backgroundColor: "var(--vscode-editor-background, white)",
-            color: "var(--vscode-editor-foreground, black)",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "10px",
-            }}
-          >
-            <h3 style={{ margin: 0 }}>Ship {shipIndex + 1}</h3>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                onClick={() => onCopyShip(shipIndex)}
-                style={{
-                  padding: "4px 8px",
-                  cursor: "pointer",
-                  backgroundColor: "var(--vscode-editor-background, white)",
-                  color: "var(--vscode-editor-foreground, black)",
-                }}
-              >
-                Copy
-              </button>
-              {player.ships.length > 1 && (
+      <div className="fleet-ships">
+
+        {player.ships.map((ship, shipIndex) => (
+          <div key={shipIndex} className="ship-card">
+            <div className="ship-heading">
+              <h3>Ship {shipIndex + 1}</h3>
+              <div className="ship-actions">
                 <button
-                  onClick={() => onRemoveShip(shipIndex)}
-                  style={{
-                    padding: "4px 8px",
-                    cursor: "pointer",
-                    backgroundColor: "var(--vscode-editor-background, white)",
-                    color: "var(--vscode-editor-foreground, black)",
-                  }}
+                  onClick={() => onCopyShip(shipIndex)}
                 >
-                  Remove
+                  Copy
                 </button>
-              )}
+                {player.ships.length > 1 && (
+                  <button
+                    onClick={() => onRemoveShip(shipIndex)}
+                    className="remove-button"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div style={{ display: "grid", gap: "8px" }}>
-            <label>
-              Health Points:
-              <input
-                type="text"
-                inputMode="numeric"
-                value={ship.healthPoints}
-                onFocus={(e) => e.target.select()}
-                onChange={(e) =>
-                  onUpdateShip(shipIndex, "healthPoints", e.target.value)
-                }
-                style={{ marginLeft: "10px", width: "80px" }}
-              />
-            </label>
+            <div className="ship-fields">
+              <label>
+                Health Points:
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={ship.healthPoints}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) =>
+                    onUpdateShip(shipIndex, "healthPoints", e.target.value)
+                  }
+                />
+              </label>
 
-            <label>
-              Initiative:
-              <input
-                type="text"
-                inputMode="numeric"
-                value={ship.initiative}
-                onFocus={(e) => e.target.select()}
-                onChange={(e) =>
-                  onUpdateShip(shipIndex, "initiative", e.target.value)
-                }
-                style={{ marginLeft: "10px", width: "80px" }}
-              />
-            </label>
+              <label>
+                Initiative:
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={ship.initiative}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) =>
+                    onUpdateShip(shipIndex, "initiative", e.target.value)
+                  }
+                />
+              </label>
 
-            <label>
-              Shield (negative):
-              <input
-                type="text"
-                inputMode="numeric"
-                value={ship.shield}
-                onFocus={(e) => e.target.select()}
-                onChange={(e) =>
-                  onUpdateShip(shipIndex, "shield", e.target.value)
-                }
-                style={{ marginLeft: "10px", width: "80px" }}
-              />
-            </label>
+              <label>
+                Shield (negative):
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={ship.shield}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) =>
+                    onUpdateShip(shipIndex, "shield", e.target.value)
+                  }
+                />
+              </label>
 
-            <label>
-              Attack Modifier:
-              <input
-                type="text"
-                inputMode="numeric"
-                value={ship.attackModifier}
-                onFocus={(e) => e.target.select()}
-                onChange={(e) =>
-                  onUpdateShip(shipIndex, "attackModifier", e.target.value)
-                }
-                style={{ marginLeft: "10px", width: "80px" }}
-              />
-            </label>
-          </div>
+              <label>
+                Attack Modifier:
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={ship.attackModifier}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) =>
+                    onUpdateShip(shipIndex, "attackModifier", e.target.value)
+                  }
+                />
+              </label>
+            </div>
 
-          <div style={{ marginTop: "15px" }}>
-            <div style={{ marginBottom: "10px" }}>
-              <strong>Missiles ({ship.missiles.length})</strong>
-              <button
-                onClick={() => onAddWeapon(shipIndex, "missiles")}
-                style={{
-                  marginLeft: "10px",
-                  padding: "2px 8px",
-                  cursor: "pointer",
-                  backgroundColor: "var(--vscode-editor-background, white)",
-                  color: "var(--vscode-editor-foreground, black)",
-                }}
-              >
-                +
-              </button>
-              {ship.missiles.map((missile, mIndex) => (
-                <div
-                  key={mIndex}
-                  style={{ marginLeft: "20px", marginTop: "5px" }}
-                >
-                  Missile {mIndex + 1} Damage:
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={missile.damage}
-                    onFocus={(e) => e.target.select()}
-                    onChange={(e) =>
-                      onUpdateWeapon(
-                        shipIndex,
-                        "missiles",
-                        mIndex,
-                        e.target.value
-                      )
-                    }
-                    style={{ marginLeft: "10px", width: "60px" }}
-                  />
-                  {ship.missiles.length > 0 && (
-                    <button
-                      onClick={() =>
-                        onRemoveWeapon(shipIndex, "missiles", mIndex)
-                      }
-                      style={{
-                        marginLeft: "10px",
-                        padding: "2px 8px",
-                        cursor: "pointer",
-                        backgroundColor:
-                          "var(--vscode-editor-background, white)",
-                        color: "var(--vscode-editor-foreground, black)",
-                      }}
-                    >
-                      ×
-                    </button>
-                  )}
+            <div className="ship-weapons">
+              <div className="weapon-group">
+                <div className="weapon-heading">
+                  <strong>Missiles ({ship.missiles.length})</strong>
+                  <button
+                    onClick={() => onAddWeapon(shipIndex, "missiles")}
+                    className="weapon-button"
+                    aria-label={`Add missile to ${playerNum === 1 ? "defender" : "attacker"} ship ${shipIndex + 1}`}
+                  >
+                    +
+                  </button>
                 </div>
-              ))}
-            </div>
+                {ship.missiles.map((missile, mIndex) => (
+                  <div
+                    key={mIndex}
+                    className="weapon-row"
+                  >
+                    <label>
+                      Missile {mIndex + 1} Damage:
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={missile.damage}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) =>
+                          onUpdateWeapon(
+                            shipIndex,
+                            "missiles",
+                            mIndex,
+                            e.target.value
+                          )
+                        }
+                      />
+                    </label>
+                    {ship.missiles.length > 0 && (
+                      <button
+                        onClick={() =>
+                          onRemoveWeapon(shipIndex, "missiles", mIndex)
+                        }
+                        className="weapon-button remove-button"
+                        aria-label={`Remove missile ${mIndex + 1} from ${playerNum === 1 ? "defender" : "attacker"} ship ${shipIndex + 1}`}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
 
-            <div>
-              <strong>Guns ({ship.guns.length})</strong>
-              <button
-                onClick={() => onAddWeapon(shipIndex, "guns")}
-                style={{
-                  marginLeft: "10px",
-                  padding: "2px 8px",
-                  cursor: "pointer",
-                  backgroundColor: "var(--vscode-editor-background, white)",
-                  color: "var(--vscode-editor-foreground, black)",
-                }}
-              >
-                +
-              </button>
-              {ship.guns.map((gun, gIndex) => (
-                <div
-                  key={gIndex}
-                  style={{ marginLeft: "20px", marginTop: "5px" }}
-                >
-                  Gun {gIndex + 1} Damage:
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={gun.damage}
-                    onFocus={(e) => e.target.select()}
-                    onChange={(e) =>
-                      onUpdateWeapon(shipIndex, "guns", gIndex, e.target.value)
-                    }
-                    style={{ marginLeft: "10px", width: "60px" }}
-                  />
-                  {ship.guns.length > 0 && (
-                    <button
-                      onClick={() => onRemoveWeapon(shipIndex, "guns", gIndex)}
-                      style={{
-                        marginLeft: "10px",
-                        padding: "2px 8px",
-                        cursor: "pointer",
-                        backgroundColor:
-                          "var(--vscode-editor-background, white)",
-                        color: "var(--vscode-editor-foreground, black)",
-                      }}
-                    >
-                      ×
-                    </button>
-                  )}
+              <div className="weapon-group">
+                <div className="weapon-heading">
+                  <strong>Guns ({ship.guns.length})</strong>
+                  <button
+                    onClick={() => onAddWeapon(shipIndex, "guns")}
+                    className="weapon-button"
+                    aria-label={`Add gun to ${playerNum === 1 ? "defender" : "attacker"} ship ${shipIndex + 1}`}
+                  >
+                    +
+                  </button>
                 </div>
-              ))}
+                {ship.guns.map((gun, gIndex) => (
+                  <div
+                    key={gIndex}
+                    className="weapon-row"
+                  >
+                    <label>
+                      Gun {gIndex + 1} Damage:
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={gun.damage}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) =>
+                          onUpdateWeapon(shipIndex, "guns", gIndex, e.target.value)
+                        }
+                      />
+                    </label>
+                    {ship.guns.length > 0 && (
+                      <button
+                        onClick={() => onRemoveWeapon(shipIndex, "guns", gIndex)}
+                        className="weapon-button remove-button"
+                        aria-label={`Remove gun ${gIndex + 1} from ${playerNum === 1 ? "defender" : "attacker"} ship ${shipIndex + 1}`}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </section>
   );
 }
 // Create all possible outcomes from dice rolls

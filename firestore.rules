@@ -1,0 +1,92 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function validGameId(id) {
+      return id is string && id.matches('[A-Za-z0-9-]{20,64}');
+    }
+
+    function validSeat(seats, index, winner) {
+      return index >= seats.size() || (
+        seats[index] is map
+        && seats[index].keys().hasOnly(['playerId', 'raceId', 'points'])
+        && seats[index].playerId in ['bp', 'ci', 'ck', 'cp', 'cg', 'cd', 'vi', 'dl', 'jr']
+        && seats[index].raceId in ['bk', 'yw', 'br', 'rd', 'wt', 'gn', 'bl', 'pk', 'or', 'gy', 'tr']
+        && (seats[index].points == null || (
+          seats[index].playerId == winner
+          && seats[index].points is int
+          && seats[index].points >= 0
+          && seats[index].points <= 9007199254740991
+        ))
+      );
+    }
+
+    function uniquePlayersAndWinner(seats, winner) {
+      let ids = [
+        seats[0].playerId,
+        seats[1].playerId,
+        seats.size() > 2 ? seats[2].playerId : seats[0].playerId,
+        seats.size() > 3 ? seats[3].playerId : seats[0].playerId,
+        seats.size() > 4 ? seats[4].playerId : seats[0].playerId,
+        seats.size() > 5 ? seats[5].playerId : seats[0].playerId
+      ];
+      return ids.toSet().size() == seats.size() && winner in ids;
+    }
+
+    function raceKey(seats, index) {
+      // Terran and unused slots get distinct numeric keys; race codes are strings.
+      return index < seats.size() && seats[index].raceId != 'tr'
+        ? seats[index].raceId
+        : index;
+    }
+
+    function uniqueNonTerranRaces(seats) {
+      return [
+        raceKey(seats, 0), raceKey(seats, 1), raceKey(seats, 2),
+        raceKey(seats, 3), raceKey(seats, 4), raceKey(seats, 5)
+      ].toSet().size() == 6;
+    }
+
+    function validGame(data) {
+      return data.keys().hasOnly([
+          'schemaVersion', 'sequence', 'playedAt', 'playerCount',
+          'winnerPlayerId', 'participants', 'createdAt'
+        ])
+        && data.schemaVersion == 1
+        && data.sequence is int && data.sequence > 0 && data.sequence <= 9007199254740991
+        && data.playedAt == null
+        && data.createdAt == request.time
+        && data.playerCount is int && data.playerCount >= 2 && data.playerCount <= 6
+        && data.participants is list && data.participants.size() == data.playerCount
+        && validSeat(data.participants, 0, data.winnerPlayerId)
+        && validSeat(data.participants, 1, data.winnerPlayerId)
+        && validSeat(data.participants, 2, data.winnerPlayerId)
+        && validSeat(data.participants, 3, data.winnerPlayerId)
+        && validSeat(data.participants, 4, data.winnerPlayerId)
+        && validSeat(data.participants, 5, data.winnerPlayerId)
+        && uniquePlayersAndWinner(data.participants, data.winnerPlayerId)
+        && uniqueNonTerranRaces(data.participants);
+    }
+
+    match /games/{gameId} {
+      allow read: if true;
+      allow create: if validGameId(gameId)
+        && validGame(request.resource.data)
+        && request.resource.data.sequence == get(/databases/$(database)/documents/metadata/gameSequence).data.sequence + 1
+        && getAfter(/databases/$(database)/documents/metadata/gameSequence).data.sequence == request.resource.data.sequence
+        && getAfter(/databases/$(database)/documents/metadata/gameSequence).data.gameId == gameId;
+      allow update, delete: if false;
+    }
+
+    match /metadata/gameSequence {
+      allow get: if true;
+      allow update: if request.resource.data.keys().hasOnly(['sequence', 'gameId'])
+        && request.resource.data.sequence is int
+        && request.resource.data.sequence == resource.data.sequence + 1
+        && validGameId(request.resource.data.gameId)
+        && !exists(/databases/$(database)/documents/games/$(request.resource.data.gameId))
+        && getAfter(/databases/$(database)/documents/games/$(request.resource.data.gameId)).data.sequence == request.resource.data.sequence
+        && getAfter(/databases/$(database)/documents/games/$(request.resource.data.gameId)).data.createdAt == request.time;
+      allow create, delete: if false;
+    }
+  }
+}
